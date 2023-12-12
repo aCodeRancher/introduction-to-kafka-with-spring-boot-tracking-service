@@ -26,18 +26,20 @@ public class DispatchTrackingHandlerTest {
 
     @Test
     public void listen_Success() throws Exception {
+        String key = randomUUID().toString();
         DispatchPreparing testEvent = TestEventData.buildDispatchPreparingEvent(randomUUID());
-        handler.listen(testEvent);
-        verify(trackingServiceMock, times(1)).process(testEvent);
+        handler.listen(key,testEvent);
+        verify(trackingServiceMock, times(1)).process(key,testEvent);
     }
 
     @Test
     public void listen_ServiceThrowsException() throws Exception {
+        String key = randomUUID().toString();
         DispatchPreparing testEvent = TestEventData.buildDispatchPreparingEvent(randomUUID());
-        doThrow(new RuntimeException("Service failure")).when(trackingServiceMock).process(testEvent);
+        doThrow(new RuntimeException("Service failure")).when(trackingServiceMock).process(key,testEvent);
 
-        handler.listen(testEvent);
+        handler.listen( key,testEvent);
 
-        verify(trackingServiceMock, times(1)).process(testEvent);
+        verify(trackingServiceMock, times(1)).process(key,testEvent);
     }
 }

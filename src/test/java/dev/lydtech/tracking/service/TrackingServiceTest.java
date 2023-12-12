@@ -10,6 +10,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static java.util.UUID.randomUUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,22 +36,23 @@ public class TrackingServiceTest {
 
     @Test
     public void process_Success() throws Exception {
-        when(kafkaProducerMock.send(anyString(), any(TrackingStatusUpdated.class))).thenReturn(mock(CompletableFuture.class));
-
+        when(kafkaProducerMock.send( anyString(), anyString(), any(TrackingStatusUpdated.class))).thenReturn(mock(CompletableFuture.class));
+        String key = randomUUID().toString();
         DispatchPreparing testEvent = TestEventData.buildDispatchPreparingEvent(UUID.randomUUID());
-        service.process(testEvent);
+        service.process(key,testEvent);
 
-        verify(kafkaProducerMock, times(1)).send(eq("tracking.status"), any(TrackingStatusUpdated.class));
+        verify(kafkaProducerMock, times(1)).send(eq("tracking.status"), eq(key),any(TrackingStatusUpdated.class));
     }
 
     @Test
     public void process_DispatchPreparingProducerThrowsException() {
-        doThrow(new RuntimeException("dispatch preparing producer failure")).when(kafkaProducerMock).send(eq("tracking.status"), any(TrackingStatusUpdated.class));
+        String key = randomUUID().toString();
+        doThrow(new RuntimeException("dispatch preparing producer failure")).when(kafkaProducerMock).send(eq("tracking.status"), eq(key) ,any(TrackingStatusUpdated.class));
 
         DispatchPreparing testEvent = TestEventData.buildDispatchPreparingEvent(UUID.randomUUID());
-        Exception exception = assertThrows(RuntimeException.class, () -> service.process(testEvent));
+        Exception exception = assertThrows(RuntimeException.class, () -> service.process(key,testEvent));
 
-        verify(kafkaProducerMock, times(1)).send(eq("tracking.status"), any(TrackingStatusUpdated.class));
+        verify(kafkaProducerMock, times(1)).send(eq("tracking.status"), eq(key),any(TrackingStatusUpdated.class));
         assertThat(exception.getMessage(), equalTo("dispatch preparing producer failure"));
     }
 }

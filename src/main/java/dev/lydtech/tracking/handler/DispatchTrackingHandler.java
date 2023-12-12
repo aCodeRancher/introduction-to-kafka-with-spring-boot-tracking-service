@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -24,9 +27,9 @@ public class DispatchTrackingHandler {
     private final TrackingService trackingService;
 
     @KafkaHandler
-    public void listen(DispatchPreparing dispatchPreparing) throws Exception {
+    public void listen(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload DispatchPreparing dispatchPreparing) throws Exception {
         try {
-            trackingService.process(dispatchPreparing);;
+            trackingService.process(key,dispatchPreparing);;
         } catch (Exception e) {
             log.error("Processing failure", e);
         }
