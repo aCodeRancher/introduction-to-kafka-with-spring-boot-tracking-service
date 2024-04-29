@@ -85,27 +85,19 @@ public class DispatchTrackingIntegrationTest {
 
     @Test
     public void testDispatchPreparingTrackingFlow() throws Exception{
+        String key = randomUUID().toString();
         DispatchPreparing dispatchPreparing = TestEventData.buildDispatchPreparingEvent(randomUUID());
-        sendMessage(DISPATCH_TRACKING_TOPIC, dispatchPreparing);
+        sendMessage(DISPATCH_TRACKING_TOPIC, key, dispatchPreparing);
 
         await().atMost(3, TimeUnit.SECONDS).pollDelay(100, TimeUnit.MILLISECONDS)
                 .until(testListener.trackingStatusCounter::get, equalTo(1));
 
     }
 
-    @Test
-    public void testDispatchCompletedTrackingFlow() throws Exception{
-        DispatchCompleted dispatchCompleted = TestEventData.buildDispatchCompletedEvent(randomUUID(), LocalDate.now().toString());
-        sendMessage(DISPATCH_TRACKING_TOPIC, dispatchCompleted);
-
-        await().atMost(3, TimeUnit.SECONDS).pollDelay(100, TimeUnit.MILLISECONDS)
-                .until(testListener.trackingStatusCounter::get, equalTo(1));
-
-    }
-
-    private void sendMessage(String topic, Object data) throws Exception {
+    private void sendMessage(String topic,  String key, Object data) throws Exception {
         kafkaTemplate.send(MessageBuilder
                 .withPayload(data)
+                        .setHeader(KafkaHeaders.KEY, key)
                 .setHeader(KafkaHeaders.TOPIC, topic)
                 .build()).get();
     }

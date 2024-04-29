@@ -17,25 +17,24 @@ public class TrackingService {
 
     private final KafkaTemplate<String, Object> kafkaProducer;
 
-    public void processDispatchPreparing(DispatchPreparing dispatchPreparing) throws Exception {
-
-        log.info("Received dispatch preparing message : " + dispatchPreparing);
+    public void process(String key, DispatchPreparing dispatchPreparing) throws Exception {
+        log.info("Received dispatch preparing message : " + key + " :" + dispatchPreparing);
 
         TrackingStatusUpdated trackingStatusUpdated = TrackingStatusUpdated.builder()
                 .orderId(dispatchPreparing.getOrderId())
                 .status(TrackingStatus.PREPARING)
                 .build();
-        kafkaProducer.send(TRACKING_STATUS_TOPIC, trackingStatusUpdated).get();
+        kafkaProducer.send(TRACKING_STATUS_TOPIC, key, trackingStatusUpdated).get();
     }
 
-    public void processDispatched(DispatchCompleted dispatchCompleted) throws Exception {
-        log.info("Received dispatched message : " + dispatchCompleted);
+
+    public void processDispatched(String key, DispatchCompleted dispatchCompleted) throws Exception {
+        log.info("Received dispatched message : " + key + ":" +dispatchCompleted);
 
         TrackingStatusUpdated trackingStatusUpdated = TrackingStatusUpdated.builder()
                 .orderId(dispatchCompleted.getOrderId())
                 .status(TrackingStatus.DISPATCHED)
                 .build();
-        kafkaProducer.send(TRACKING_STATUS_TOPIC, trackingStatusUpdated).get();
+        kafkaProducer.send(TRACKING_STATUS_TOPIC, key, trackingStatusUpdated).get();
     }
-
 }
